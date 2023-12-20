@@ -290,15 +290,17 @@ EventEngine::ConnectionHandle PosixEventEngine::ConnectInternal(
     // attempts.
     handle->OrphanHandle(nullptr, nullptr, "tcp_client_connect_error");
     Run([on_connect = std::move(on_connect),
-         ep = absl::FailedPreconditionError(
-             absl::StrCat("connect failed: ", "addr: ", addr_uri.value(),
-                          " error: ", std::strerror(connect_errno)))]() mutable {
+         ep = absl::FailedPreconditionError(absl::StrCat(
+             "connect failed: ", "addr: ", addr_uri.value(),
+             " error: ", std::strerror(connect_errno)))]() mutable {
       on_connect(std::move(ep));
     });
     return EventEngine::ConnectionHandle::kInvalid;
   }
   // Connection is still in progress.
-  int64_t connection_id = last_connection_id_.fetch_add(1, std::memory_order_acq_rel);;
+  int64_t connection_id =
+      last_connection_id_.fetch_add(1, std::memory_order_acq_rel);
+  ;
   AsyncConnect* ac = new AsyncConnect(
       std::move(on_connect), shared_from_this(), executor_.get(), handle,
       std::move(allocator), options, addr_uri.value(), connection_id);
